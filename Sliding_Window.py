@@ -41,11 +41,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     seq_id = 0
     StartThroughputTime = time.time()
     delays_per_packet = {}
+    acks = {}
+    messages = []
     slide_amount = WINDOW_SIZE
     while seq_id < len(data)/4:        
         # create messages
-        messages = []
-        acks = {}
         seq_id_tmp = seq_id + (MESSAGE_SIZE * (WINDOW_SIZE - slide_amount))
         for i in range(slide_amount):
             # construct messages
