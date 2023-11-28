@@ -41,29 +41,41 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         # send messages
         for _, message in messages:
             udp_socket.sendto(message, ('localhost', 5001))
-        
-        # wait for acknowledgement
-        while True:
+
             try:
-                # wait for ack
                 ack, _ = udp_socket.recvfrom(PACKET_SIZE)
-                
-                # extract ack id
+
                 ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
                 print(ack_id, ack[SEQ_ID_SIZE:])
-                acks[ack_id] = True
+            except:
+                print("Packet Rejected")
+                udp_socket.sendto(message, ('localhost', 5001))
+
+        seq_id += MESSAGE_SIZE * WINDOW_SIZE
+
+        # wait for acknowledgement
+        # while True:
+        #     try:
+        #         # wait for ack
+        #         ack, _ = udp_socket.recvfrom(PACKET_SIZE)
                 
-                # all acks received, move on
-                if all(acks.values()):
-                    break
-            except socket.timeout:
-                # no ack received, resend unacked messages
-                for sid, message in messages:
-                    if not acks[sid]:
-                        udp_socket.sendto(message, ('localhost', 5001))
+        #         # extract ack id
+        #         ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
+        #         print(ack_id, ack[SEQ_ID_SIZE:])
+        #         acks[ack_id] = True
+                
+        #         # all acks received, move on
+        #         if all(acks.values()):
+        #             break
+        #     except socket.timeout:
+        #         # no ack received, resend unacked messages
+        #         for sid, message in messages:
+        #             if not acks[sid]:
+        #                 print("Packet Rejected")
+        #                 udp_socket.sendto(message, ('localhost', 5001))
                 
         # move sequence id forward
-        seq_id += MESSAGE_SIZE * WINDOW_SIZE
+        #seq_id += MESSAGE_SIZE * WINDOW_SIZE
         
     # send final closing message
     udp_socket.sendto(int.to_bytes(-1, 4, signed=True, byteorder='big'), ('localhost', 5001))
