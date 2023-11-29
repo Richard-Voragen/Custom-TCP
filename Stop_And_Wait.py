@@ -1,5 +1,4 @@
 import socket
-from datetime import datetime
 import time
 
 # total packet size
@@ -24,7 +23,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     seq_id = 0
     delays_per_packet = []
     StartThroughputTime = time.time()
-    while seq_id < len(data)/4:
+    while seq_id < len(data):
         
         # create messages
         seq_id_tmp = seq_id
@@ -49,7 +48,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     udp_socket.sendto(int.to_bytes(-1, 4, signed=True, byteorder='big'), ('localhost', 5001))
     totalTime = (time.time() - StartThroughputTime)
 
-    print("Average delay per packet was : " + (sum(delays_per_packet)/len(delays_per_packet)).__str__() + " seconds")
-    print("Total amount of packets : " + len(delays_per_packet).__str__())
-    print("Total time was : " + totalTime.__str__())
-    print("Throughput was : " + (len(data)/totalTime).__str__() + "bytes per second")
+    #print("Total time was : " + totalTime.__str__())
+    #print("Total amount of packets : " + (len(acks)-WINDOW_SIZE).__str__())
+    print("Average delay per packet was : " + (totalTime/(len(acks)-WINDOW_SIZE)).__str__() + " seconds")
+    print("Throughput was : " + (len(data)/totalTime).__str__() + " bytes per second")
