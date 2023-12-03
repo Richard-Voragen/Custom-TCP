@@ -9,7 +9,7 @@ SEQ_ID_SIZE = 4
 MESSAGE_SIZE = PACKET_SIZE - SEQ_ID_SIZE
 
 # read data
-with open('send.txt', 'rb') as f:
+with open('file.mp3', 'rb') as f:
     data = f.read()
  
 # create a udp socket
@@ -22,7 +22,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     # start sending data from 0th sequence
     seq_id = 0
     StartThroughputTime = time.time()
-    while seq_id < len(data):
+    while seq_id < len(data)/20:
         
         # create messages
         seq_id_tmp = seq_id
@@ -36,15 +36,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         try:
             ack, _ = udp_socket.recvfrom(PACKET_SIZE)
             ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
-            print(ack_id/1020)
+            #print(ack_id/1020)
         except:
-            print("Packet Rejected")
+            #print("Packet Rejected")
             udp_socket.sendto(message, ('localhost', 5001))
 
         seq_id += MESSAGE_SIZE
         
     # send final closing message
-    udp_socket.sendto(int.to_bytes(-1, 4, signed=True, byteorder='big'), ('localhost', 5001))
+    closingMessage = int.to_bytes(-1, SEQ_ID_SIZE, byteorder='big', signed=True) + b"==FINACK=="
+    udp_socket.sendto(closingMessage, ('localhost', 5001))
+
     totalTime = (time.time() - StartThroughputTime)
     totalPackages = int(len(data)/MESSAGE_SIZE) + (len(data) % MESSAGE_SIZE > 0)
 

@@ -9,13 +9,17 @@ SEQ_ID_SIZE = 4
 # bytes available for message
 MESSAGE_SIZE = PACKET_SIZE - SEQ_ID_SIZE
 # total packets to send
-WINDOW_SIZE = 100
+WINDOW_SIZE = 0
+
+WINDOW_SIZE_FINAL = 100 #This is only needed for sliding window
 
 # read data
-with open('send.txt', 'rb') as f:
+with open('file.mp3', 'rb') as f:
     data = f.read()
+    data += (b'\x00'* (MESSAGE_SIZE - (len(data)%MESSAGE_SIZE)))
 
-#sends out the next message
+
+#sends out the next message for the sliding window
 def send_next_message(seq_id):
     temp_id = seq_id + (WINDOW_SIZE * MESSAGE_SIZE)
     if ((seq_id + (WINDOW_SIZE * MESSAGE_SIZE)) < len(data)):
@@ -28,16 +32,27 @@ def resend_message(seq_id):
     message = int.to_bytes(seq_id, SEQ_ID_SIZE, byteorder='big', signed=True) + data[seq_id : seq_id + MESSAGE_SIZE]
     udp_socket.sendto(message, ('localhost', 5001))
 
-def send_initial_messages():
-    seq_id_tmp = 0
+def send_closing_message(seq_id):
+    finalMessage = int.to_bytes(seq_id + MESSAGE_SIZE, SEQ_ID_SIZE, byteorder='big', signed=True)
+    udp_socket.sendto(finalMessage, ('localhost', 5001))
+
+    closingMessage = int.to_bytes(-1, SEQ_ID_SIZE, byteorder='big', signed=True) + b"==FINACK=="
+    udp_socket.sendto(closingMessage, ('localhost', 5001))    
+
+def increase_window_size(seq_id, increaseSizeBy):
+    global WINDOW_SIZE
+    seq_id_tmp = seq_id + (MESSAGE_SIZE*WINDOW_SIZE)
     messages = []
-    for i in range(WINDOW_SIZE):
+    for i in range(increaseSizeBy):
         # construct messages
         # sequence id of length SEQ_ID_SIZE + message of remaining PACKET_SIZE - SEQ_ID_SIZE bytes
         message = int.to_bytes(seq_id_tmp, SEQ_ID_SIZE, byteorder='big', signed=True) + data[seq_id_tmp : seq_id_tmp + MESSAGE_SIZE]
         messages.append((seq_id_tmp, message))
         # move seq_id tmp pointer ahead
         seq_id_tmp += MESSAGE_SIZE
+
+    WINDOW_SIZE += increaseSizeBy
+    #print("NEW WINDOW SIZE: ", WINDOW_SIZE)
 
     # send messages
     for sid, message in messages:
@@ -55,7 +70,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     StartThroughputTime = time.time()
     fast_retransmit = 0
 
-    send_initial_messages()
+    increase_window_size(seq_id, WINDOW_SIZE_FINAL)
     while seq_id < len(data):        
         try:
             # wait for ack
@@ -63,6 +78,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             
             # extract ack id
             ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
+            #print(ack_id/1020)
             
             if (ack_id == seq_id):
                 fast_retransmit += 1
@@ -79,14 +95,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
 
         except socket.timeout:
             # no ack received, resend unacked message
-            #print("Socket Timeout")
             fast_retransmit = 0
+            #print("Socket Timeout")
             resend_message(seq_id)
-        if (seq_id + MESSAGE_SIZE > len(data)):
+        if (seq_id + MESSAGE_SIZE >= len(data)):
             break
 
     # send final closing message
-    udp_socket.sendto(int.to_bytes(-1, 4, signed=True, byteorder='big'), ('localhost', 5001))
+    send_closing_message(seq_id)
+
     totalTime = (time.time() - StartThroughputTime)
     totalPackages = int(len(data)/MESSAGE_SIZE) + (len(data) % MESSAGE_SIZE > 0)
 

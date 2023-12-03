@@ -1,5 +1,6 @@
 import random
 import socket
+import time
 
 PACKET_SIZE = 1024
 SEQ_ID_SIZE = 4
