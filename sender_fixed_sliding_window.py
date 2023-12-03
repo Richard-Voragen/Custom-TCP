@@ -78,17 +78,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             
             # extract ack id
             ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
-            #print(ack_id/1020)
+            print(ack_id/1020)
             
             if (ack_id == seq_id):
                 fast_retransmit += 1
                 if (fast_retransmit == 3):
-                    #print("Fast Retransmit")
+                    print("Fast Retransmit")
                     resend_message(seq_id)
                     fast_retransmit = 0
-                elif (seq_id + MESSAGE_SIZE > len(data)):
+                elif (seq_id + MESSAGE_SIZE >= len(data)):
                     break
-            else:
+            elif (ack_id <= seq_id+(MESSAGE_SIZE*WINDOW_SIZE)):
                 fast_retransmit = 0
                 while (seq_id < ack_id):
                     seq_id = send_next_message(seq_id)
@@ -96,7 +96,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         except socket.timeout:
             # no ack received, resend unacked message
             fast_retransmit = 0
-            #print("Socket Timeout")
+            print("Socket Timeout")
             resend_message(seq_id)
         if (seq_id + MESSAGE_SIZE >= len(data)):
             break
