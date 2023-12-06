@@ -68,7 +68,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
 
     # bind the socket to a OS port
     udp_socket.bind(("0.0.0.0", 5000))
-    udp_socket.settimeout(1)
+    udp_socket.settimeout(0.25)
     
     # start sending data from 0th sequence
     seq_id = 0
@@ -90,7 +90,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             if (ack_id == seq_id):
                 fast_retransmit += 1
                 if (fast_retransmit == 3):
-                    print("Fast Retransmit")
+                    #print("Fast Retransmit")
                     resend_message(seq_id)
                     fast_retransmit = 0
                 elif (seq_id + MESSAGE_SIZE >= len(data)):
@@ -104,7 +104,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         except socket.timeout:
             # no ack received, resend unacked message
             fast_retransmit = 0
-            print("Socket Timeout")
+            #print("Socket Timeout")
             resend_message(seq_id)
         if (seq_id + MESSAGE_SIZE >= len(data)):
             break
@@ -122,9 +122,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         total += value
         count += 1
 
-    print(total/count)
-    print("Total time was : " + totalTime.__str__())
-    print("Total amount of packets : " + totalPackages.__str__())
-    print("Average delay per packet was : " + (totalTime/totalPackages).__str__() + " seconds")
-    print("Throughput was : " + (len(data)/totalTime).__str__() + " bytes per second")
-    print("Performance Metric : " + ((len(data)/totalTime)/(total/count)).__str__())
+    #print("Total time was : " + totalTime.__str__())
+    #print("Total amount of packets : " + totalPackages.__str__())
+    print(round(len(data)/totalTime, 2).__str__() + ",")
+    print(round(total/count, 2).__str__() + ",")
+    print(round((len(data)/totalTime)/(total/count), 2).__str__())

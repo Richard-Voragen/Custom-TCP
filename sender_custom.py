@@ -32,10 +32,10 @@ def get_initial_time(seq_id):
             seq_id = send_next_message(seq_id)
         except socket.timeout:
             # no ack received, resend unacked message
-            print("Socket Timeout")
+            #print("Socket Timeout")
             resend_message(seq_id)
     max *= 1.25
-    print(max)
+    #print(max)
     return seq_id, max
 
 
@@ -70,7 +70,7 @@ def increase_window_size(seq_id):
     send_next_message(seq_id)
     WINDOW_SIZE += 1
 
-    print("NEW WINDOW SIZE: ", WINDOW_SIZE)
+    #print("NEW WINDOW SIZE: ", WINDOW_SIZE)
 
 def reset_window_size():
     global SSTHRESH, WINDOW_SIZE, waitTime
@@ -153,8 +153,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         total += value
         count += 1
 
-    print("Total time was : " + totalTime.__str__())
-    print("Total amount of packets : " + totalPackages.__str__())
-    print("Throughput : " + (len(data)/totalTime).__str__() + " bytes per second")
-    print("Average delay per packet : " + (total/count).__str__() + " seconds")
-    print("Performance Metric : " + ((len(data)/totalTime)/(total/count)).__str__())
+    #print("Total time was : " + totalTime.__str__())
+    #print("Total amount of packets : " + totalPackages.__str__())
+    print(round(len(data)/totalTime, 2).__str__() + ",")
+    print(round(total/count, 2).__str__() + ",")
+    print(round((len(data)/totalTime)/(total/count), 2).__str__())

@@ -67,9 +67,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         total += value
         count += 1
 
-    print((total/count))
-    print("Total time was : " + totalTime.__str__())
-    print("Total amount of packets : " + totalPackages.__str__())
-    print("Average delay per packet was : " + (totalTime/totalPackages).__str__() + " seconds")
-    print("Throughput was : " + (len(data)/totalTime).__str__() + " bytes per second")
-    print("Performance Metric : " + ((len(data)/totalTime)/(total/count)).__str__())
+    #print("Total time was : " + totalTime.__str__())
+    #print("Total amount of packets : " + totalPackages.__str__())
+    print(round(len(data)/totalTime, 2).__str__() + ",")
+    print(round(total/count, 2).__str__() + ",")
+    print(round((len(data)/totalTime)/(total/count), 2).__str__())
