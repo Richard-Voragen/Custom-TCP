@@ -143,4 +143,4 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
 
     print('{:.2f},'.format(round(len(data) / totalTime, 2)))
     print('{:.2f},'.format(round(total / count, 2)))
-    print('{:.2f},'.format(round((len(data) / totalTime) / (total / count), 2)))
+    print('{:.2f}'.format(round((len(data) / totalTime) / (total / count), 2)))
