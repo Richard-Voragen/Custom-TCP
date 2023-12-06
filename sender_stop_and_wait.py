@@ -28,7 +28,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     
     # start sending data from 0th sequence
     seq_id = 0
-    StartThroughputTime = time.time()
+    StartThroughputTime = time.perf_counter()
 
     per_packet_delay = {}
     while seq_id < len(data):
@@ -41,11 +41,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         message = int.to_bytes(seq_id_tmp, SEQ_ID_SIZE, byteorder='big', signed=True) + data[seq_id_tmp : seq_id_tmp + MESSAGE_SIZE]
 
         udp_socket.sendto(message, ('localhost', 5001))
-        per_packet_delay[seq_id] = time.time()
+        per_packet_delay[seq_id] = time.perf_counter()
 
         try:
             ack, _ = udp_socket.recvfrom(PACKET_SIZE)
-            per_packet_delay[seq_id] = time.time() - per_packet_delay[seq_id]
+            per_packet_delay[seq_id] = time.perf_counter() - per_packet_delay[seq_id]
             ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
             #print(ack_id/1020)
         except:
@@ -57,7 +57,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     # send final closing message
     send_closing_message(seq_id)
 
-    totalTime = (time.time() - StartThroughputTime)
+    totalTime = (time.perf_counter() - StartThroughputTime)
     totalPackages = int(len(data)/MESSAGE_SIZE) + (len(data) % MESSAGE_SIZE > 0)
 
     per_packet_delay.popitem()

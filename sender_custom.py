@@ -26,7 +26,7 @@ def get_initial_time(seq_id):
         try:
             # wait for ack
             ack, _ = udp_socket.recvfrom(PACKET_SIZE)
-            per_packet_delay[seq_id] = time.time() - per_packet_delay[seq_id]
+            per_packet_delay[seq_id] = time.perf_counter() - per_packet_delay[seq_id]
             if (per_packet_delay[seq_id] > max):
                 max = per_packet_delay[seq_id]
             seq_id = send_next_message(seq_id)
@@ -49,7 +49,7 @@ def send_next_message(seq_id):
         message = int.to_bytes(temp_id, SEQ_ID_SIZE, byteorder='big', signed=True) + data[temp_id : temp_id + MESSAGE_SIZE]
         udp_socket.sendto(message, ('localhost', 5001))
 
-        per_packet_delay[temp_id] = time.time()
+        per_packet_delay[temp_id] = time.perf_counter()
     return (seq_id + MESSAGE_SIZE)
 
 #resends the message at seq_id
@@ -76,9 +76,9 @@ def reset_window_size():
     global SSTHRESH, WINDOW_SIZE, waitTime
     SSTHRESH = max(20, WINDOW_SIZE)
     WINDOW_SIZE = int(WINDOW_SIZE/2)
-    waitTime = time.time()
+    waitTime = time.perf_counter()
 
-waitTime = time.time()
+waitTime = time.perf_counter()
 # create a udp socket
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
 
@@ -89,7 +89,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     # start sending data from 0th sequence
     seq_id = 0
     temp_window_size_adder = 0.0
-    StartThroughputTime = time.time()
+    StartThroughputTime = time.perf_counter()
     fast_retransmit = 0
 
     per_packet_delay = {}
@@ -106,7 +106,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
             #print("RECV", ack_id/1020)
             
-            if (ack_id == seq_id and (time.time()-waitTime) > 2):
+            if (ack_id == seq_id and (time.perf_counter()-waitTime) > 2):
                 fast_retransmit += 1
                 if (fast_retransmit == 3):
                     #print("Fast Retransmit")
@@ -118,7 +118,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             elif (ack_id != seq_id):
                 fast_retransmit = 0
                 while (seq_id < ack_id):
-                    per_packet_delay[seq_id] = time.time() - per_packet_delay[seq_id]
+                    per_packet_delay[seq_id] = time.perf_counter() - per_packet_delay[seq_id]
                     seq_id = send_next_message(seq_id)
                 if per_packet_delay[seq_id-MESSAGE_SIZE] > delay:
                     reset_window_size()
@@ -143,7 +143,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     # send final closing message
     send_closing_message(seq_id)
 
-    totalTime = (time.time() - StartThroughputTime)
+    totalTime = (time.perf_counter() - StartThroughputTime)
     totalPackages = int(len(data)/MESSAGE_SIZE) + (len(data) % MESSAGE_SIZE > 0)
 
     per_packet_delay.popitem()
