@@ -67,8 +67,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
         total += value
         count += 1
 
-    #print("Total time was : " + totalTime.__str__())
-    #print("Total amount of packets : " + totalPackages.__str__())
-    print(round(len(data)/totalTime, 2).__str__() + ",")
-    print(round(total/count, 2).__str__() + ",")
-    print(round((len(data)/totalTime)/(total/count), 2).__str__())
+    # print("Total time was : " + totalTime.__str__())
+    # print("Total amount of packets : " + totalPackages.__str__())
+    
+    # print(round(len(data)/totalTime, 2).__str__() + ",")
+    # print(round(total/count, 2).__str__() + ",")
+    # print(round((len(data)/totalTime)/(total/count), 2).__str__())
+
+    print('{:.2f},'.format(round(len(data) / totalTime, 2)))
+    print('{:.2f},'.format(round(total / count, 2)))
+    print('{:.2f},'.format(round((len(data) / totalTime) / (total / count), 2)))
