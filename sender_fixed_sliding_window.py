@@ -11,7 +11,7 @@ MESSAGE_SIZE = PACKET_SIZE - SEQ_ID_SIZE
 # total packets to send
 WINDOW_SIZE = 0
 
-WINDOW_SIZE_FINAL = 20 #This is only needed for sliding window
+WINDOW_SIZE_FINAL = 100 #This is only needed for sliding window
 
 # read data
 with open('file.mp3', 'rb') as f:
@@ -28,7 +28,7 @@ def send_next_message(seq_id):
         message = int.to_bytes(temp_id, SEQ_ID_SIZE, byteorder='big', signed=True) + data[temp_id : temp_id + MESSAGE_SIZE]
         udp_socket.sendto(message, ('localhost', 5001))
 
-        per_packet_delay[temp_id] = time.perf_counter()
+        per_packet_delay[temp_id] = time.time()
     return (seq_id + MESSAGE_SIZE)
 
 #resends the message at seq_id
@@ -60,7 +60,7 @@ def increase_window_size(seq_id, increaseSizeBy):
 
     # send messages
     for sid, message in messages:
-        per_packet_delay[sid] = time.perf_counter()
+        per_packet_delay[sid] = time.time()
         udp_socket.sendto(message, ('localhost', 5001))
 
 # create a udp socket
@@ -72,7 +72,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     
     # start sending data from 0th sequence
     seq_id = 0
-    StartThroughputTime = time.perf_counter()
+    StartThroughputTime = time.time()
     fast_retransmit = 0
 
     per_packet_delay = {}
@@ -98,7 +98,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             elif (ack_id <= seq_id+(MESSAGE_SIZE*WINDOW_SIZE)):
                 fast_retransmit = 0
                 while (seq_id < ack_id):
-                    per_packet_delay[seq_id] = time.perf_counter() - per_packet_delay[seq_id]
+                    per_packet_delay[seq_id] = time.time() - per_packet_delay[seq_id]
                     seq_id = send_next_message(seq_id)
 
         except socket.timeout:
@@ -112,7 +112,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     # send final closing message
     send_closing_message(seq_id)
 
-    totalTime = (time.perf_counter() - StartThroughputTime)
+    totalTime = (time.time() - StartThroughputTime)
     totalPackages = int(len(data)/MESSAGE_SIZE) + (len(data) % MESSAGE_SIZE > 0)
 
     per_packet_delay.popitem()

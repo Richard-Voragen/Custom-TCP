@@ -26,7 +26,7 @@ def send_message(seq_id):
     if (seq_id < len(data)):
         #print("SENT", temp_id/1020)
         message = int.to_bytes(temp_id, SEQ_ID_SIZE, byteorder='big', signed=True) + data[temp_id : temp_id + MESSAGE_SIZE]
-        per_packet_delay[temp_id] = time.perf_counter()
+        per_packet_delay[temp_id] = time.time()
         udp_socket.sendto(message, ('localhost', 5001))
     return (seq_id + MESSAGE_SIZE)
 
@@ -74,7 +74,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     seq_id = 0
     max_seq_id = 0
     temp_window_size_adder = 0.0
-    StartThroughputTime = time.perf_counter()
+    StartThroughputTime = time.time()
     fast_retransmit = 0
 
     acks_num = 0
@@ -104,7 +104,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             elif (ack_id != seq_id):
                 fast_retransmit = 0
                 while (seq_id < ack_id):
-                    per_packet_delay[seq_id] = time.perf_counter() - per_packet_delay[seq_id]
+                    per_packet_delay[seq_id] = time.time() - per_packet_delay[seq_id]
                     seq_id += MESSAGE_SIZE
 
             if (seq_id == max_seq_id):
@@ -129,7 +129,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     # send final closing message
     send_closing_message(seq_id)
 
-    totalTime = (time.perf_counter() - StartThroughputTime)
+    totalTime = (time.time() - StartThroughputTime)
     totalPackages = int(len(data)/MESSAGE_SIZE) + (len(data) % MESSAGE_SIZE > 0)
 
     per_packet_delay.popitem()
