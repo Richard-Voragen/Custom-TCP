@@ -11,7 +11,7 @@ MESSAGE_SIZE = PACKET_SIZE - SEQ_ID_SIZE
 # total packets to send
 WINDOW_SIZE = 0
 
-WINDOW_SIZE_FINAL = 100 #This is only needed for sliding window
+WINDOW_SIZE_FINAL = 20 #This is only needed for sliding window
 
 # read data
 with open('file.mp3', 'rb') as f:
@@ -21,10 +21,14 @@ with open('file.mp3', 'rb') as f:
 
 #sends out the next message for the sliding window
 def send_next_message(seq_id):
+    global per_packet_delay
+
     temp_id = seq_id + (WINDOW_SIZE * MESSAGE_SIZE)
     if ((seq_id + (WINDOW_SIZE * MESSAGE_SIZE)) < len(data)):
         message = int.to_bytes(temp_id, SEQ_ID_SIZE, byteorder='big', signed=True) + data[temp_id : temp_id + MESSAGE_SIZE]
         udp_socket.sendto(message, ('localhost', 5001))
+
+        per_packet_delay[temp_id] = time.time()
     return (seq_id + MESSAGE_SIZE)
 
 #resends the message at seq_id
@@ -56,6 +60,7 @@ def increase_window_size(seq_id, increaseSizeBy):
 
     # send messages
     for sid, message in messages:
+        per_packet_delay[sid] = time.time()
         udp_socket.sendto(message, ('localhost', 5001))
 
 # create a udp socket
@@ -70,6 +75,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     StartThroughputTime = time.time()
     fast_retransmit = 0
 
+    per_packet_delay = {}
+
     increase_window_size(seq_id, WINDOW_SIZE_FINAL)
     while seq_id < len(data):        
         try:
@@ -78,7 +85,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             
             # extract ack id
             ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
-            print(ack_id/1020)
+            #print(ack_id/1020)
             
             if (ack_id == seq_id):
                 fast_retransmit += 1
@@ -91,6 +98,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
             elif (ack_id <= seq_id+(MESSAGE_SIZE*WINDOW_SIZE)):
                 fast_retransmit = 0
                 while (seq_id < ack_id):
+                    per_packet_delay[seq_id] = time.time() - per_packet_delay[seq_id]
                     seq_id = send_next_message(seq_id)
 
         except socket.timeout:
@@ -107,7 +115,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
     totalTime = (time.time() - StartThroughputTime)
     totalPackages = int(len(data)/MESSAGE_SIZE) + (len(data) % MESSAGE_SIZE > 0)
 
-    #print("Total time was : " + totalTime.__str__())
-    #print("Total amount of packets : " + totalPackages.__str__())
+    per_packet_delay.popitem()
+    total = 0.0
+    count = 0
+    for value in per_packet_delay.values():
+        total += value
+        count += 1
+
+    print(total/count)
+    print("Total time was : " + totalTime.__str__())
+    print("Total amount of packets : " + totalPackages.__str__())
     print("Average delay per packet was : " + (totalTime/totalPackages).__str__() + " seconds")
     print("Throughput was : " + (len(data)/totalTime).__str__() + " bytes per second")
+    print("Performance Metric : " + ((len(data)/totalTime)/(total/count)).__str__())
