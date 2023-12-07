@@ -20,16 +20,19 @@ def send_closing_message(seq_id, udp_socket):
 
 # read data
 
-def send(packet):
+def send(packet, startTime):
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
 
         # bind the socket to a OS port
-        udp_socket.bind(("0.0.0.0", threading.get_native_id()))
-        udp_socket.settimeout(0.5)
+        if (startTime == 0):
+            udp_socket.bind(("0.0.0.0", threading.get_native_id()))
+            udp_socket.settimeout(0.5)
+            StartThroughputTime = time.time()
+        else:
+            StartThroughputTime = startTime
         
         # start sending data from 0th sequence
         seq_id = packet*MESSAGE_SIZE
-        StartThroughputTime = time.time()
 
 
         print(packet)
@@ -49,7 +52,7 @@ def send(packet):
             print("acked", ack_id/1020)
         except:
             print("Packet Rejected")
-            udp_socket.sendto(message, ('localhost', 5001))
+            send(packet, per_packet_delay)
         
         return per_packet_delay
 
@@ -58,13 +61,20 @@ with open('file.mp3', 'rb') as f:
     data = f.read()
     data += (b'\x00'* (MESSAGE_SIZE - (len(data)%MESSAGE_SIZE)))
 
-
+StartThroughputTime = time.time()
 total_data = math.ceil(len(data)/MESSAGE_SIZE)
-results = Parallel(n_jobs=5)(delayed(send)(i) for i in range(total_data))
+results = Parallel(n_jobs=8)(delayed(send)(i, 0) for i in range(total_data))
 
+send_closing_message(math.ceil(len(data)/MESSAGE_SIZE))
+
+StartThroughputTime = time.time() - StartThroughputTime
 sum = 0
 for i in results:
-    sum += 1
+    sum += i
 
 print(results)
-print("Average Packet Delay : ", )
+
+throughput = len(data)/StartThroughputTime
+print(StartThroughputTime)
+print("Average Packet Delay : ", (sum/len(results)).__str__())
+print("Throughput : ", throughput.__str__())
