@@ -78,8 +78,9 @@ def worker(port, data):
         print('{:.2f}'.format(round((len(data) / totalTime) / (total / count), 2)))
 
 
-with open('sendcopy.txt', 'rb') as f:
+with open('file.mp3', 'rb') as f:
     data = f.read()
+    data += (b'\x00'* (MESSAGE_SIZE - (len(data)%MESSAGE_SIZE)))
 
 SEGMENT_NUMBER = 5
 segment_length = len(data) / SEGMENT_NUMBER

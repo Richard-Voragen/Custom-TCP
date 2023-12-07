@@ -18,6 +18,7 @@ def send_closing_message(seq_id):
 # read data
 with open('file.mp3', 'rb') as f:
     data = f.read()
+    data += (b'\x00'* (MESSAGE_SIZE - (len(data)%MESSAGE_SIZE)))
  
 # create a udp socket
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
