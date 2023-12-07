@@ -11,12 +11,16 @@ SEQ_ID_SIZE = 4
 # bytes available for message
 MESSAGE_SIZE = PACKET_SIZE - SEQ_ID_SIZE
 
-def send_closing_message(seq_id, udp_socket):
-    finalMessage = int.to_bytes(seq_id + MESSAGE_SIZE, SEQ_ID_SIZE, byteorder='big', signed=True)
-    udp_socket.sendto(finalMessage, ('localhost', 5001))
+def send_closing_message(seq_id):
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+        udp_socket.bind(("0.0.0.0", 5000))
+        udp_socket.settimeout(0.5)
 
-    closingMessage = int.to_bytes(-1, SEQ_ID_SIZE, byteorder='big', signed=True) + b"==FINACK=="
-    udp_socket.sendto(closingMessage, ('localhost', 5001))    
+        finalMessage = int.to_bytes(seq_id + MESSAGE_SIZE, SEQ_ID_SIZE, byteorder='big', signed=True)
+        udp_socket.sendto(finalMessage, ('localhost', 5001))
+
+        closingMessage = int.to_bytes(-1, SEQ_ID_SIZE, byteorder='big', signed=True) + b"==FINACK=="
+        udp_socket.sendto(closingMessage, ('localhost', 5001))    
 
 # read data
 
@@ -35,7 +39,7 @@ def send(packet, startTime):
         seq_id = packet*MESSAGE_SIZE
 
 
-        print(packet)
+        #print(packet)
         math.ceil(len(data)/MESSAGE_SIZE)
 
         # construct messages
@@ -49,9 +53,9 @@ def send(packet, startTime):
             ack, _ = udp_socket.recvfrom(PACKET_SIZE)
             per_packet_delay = time.time() - per_packet_delay
             ack_id = int.from_bytes(ack[:SEQ_ID_SIZE], byteorder='big')
-            print("acked", ack_id/1020)
+            #print("acked", ack_id/1020)
         except:
-            print("Packet Rejected")
+            #print("Packet Rejected")
             send(packet, per_packet_delay)
         
         return per_packet_delay
@@ -63,14 +67,15 @@ with open('file.mp3', 'rb') as f:
 
 StartThroughputTime = time.time()
 total_data = math.ceil(len(data)/MESSAGE_SIZE)
-results = Parallel(n_jobs=8)(delayed(send)(i, 0) for i in range(total_data))
+results = Parallel(n_jobs=20)(delayed(send)(i, 0) for i in range(total_data))
 
 send_closing_message(math.ceil(len(data)/MESSAGE_SIZE))
 
 StartThroughputTime = time.time() - StartThroughputTime
 sum = 0
 for i in results:
-    sum += i
+    if i < 5:
+        sum += i
 
 print(results)
 
@@ -78,3 +83,4 @@ throughput = len(data)/StartThroughputTime
 print(StartThroughputTime)
 print("Average Packet Delay : ", (sum/len(results)).__str__())
 print("Throughput : ", throughput.__str__())
+print("Performance Score : ", (throughput/(sum/len(results))).__str__())
