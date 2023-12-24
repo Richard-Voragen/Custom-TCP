@@ -1,4 +1,19 @@
 # Custom TCP Protocols
+
+## Installation
+### Prerequisites
+You will need to install [docker](https://docs.docker.com/engine/install/ubuntu/) and python 3.10
+### Running the docker
+Navigate to the docker folder and run the command
+```
+./start-simulator.sh
+```
+Next to run a specific program just run the python file:
+```
+python3 sender_custom.py
+```
+
+
 ## Description of Protocols
 ### Stop and Wait Protocol
 ---
