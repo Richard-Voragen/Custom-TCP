@@ -59,7 +59,7 @@ us to get a throughput that is about 6 times faster than the stop and wait proto
 | Protocol | Average Throughput | Average Packet Delay |
 | ----------------------------------- | ---------------------------- | -------------- |
 | Stop and Wait | 9,709.44 bits/second | 0.10 seconds |
-| Fixed Sliding Window | 85,292.01 bits/second | 1.18 seconds |
+| Fixed Sliding Window      | 85,292.01 bits/second | 1.18 seconds |
 | TCP Tahoe | 69,051.64 bits/second | 0.59 seconds |
-| TCP Reno | 81,582.78 bits/second | 0.62 seconds |
+| TCP Reno | 81,582.78 bits/second        | 0.62 seconds |
 | Custom TCP | 63,412.07 bits/second | 0.18 seconds |
