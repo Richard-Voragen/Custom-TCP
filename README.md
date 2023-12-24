@@ -1,6 +1,7 @@
 # Custom TCP Protocols
 
 ## Installation
+---
 ### Prerequisites
 You will need to install [docker](https://docs.docker.com/engine/install/ubuntu/) and python 3.10
 ### Running the docker
@@ -15,6 +16,7 @@ python3 sender_custom.py
 
 
 ## Description of Protocols
+---
 ### Stop and Wait Protocol
 ---
 In our stop-and-wait protocol, we send out one packet and wait for an acknowledgement. Once it receives the acknowledgement for the packet from the receiver, it sends the next packet in the sequence. Only one packet is transmitted at any time and we incorporated a timeout of 0.5 seconds in case an acknowledgement isn’t received in time to reduce average packet delays.
@@ -55,7 +57,7 @@ us to get a throughput that is about 6 times faster than the stop and wait proto
 
 ## Performance of Each Protocol
 | Protocol | Average Throughput | Average Packet Delay |
-| -------------------- | ------------------ | -------------- |
+| ----------------------------------- | ---------------------------- | -------------- |
 | Stop and Wait | 9,709.44 bits/second | 0.10 seconds |
 | Fixed Sliding Window | 85,292.01 bits/second | 1.18 seconds |
 | TCP Tahoe | 69,051.64 bits/second | 0.59 seconds |
